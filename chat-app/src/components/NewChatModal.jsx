@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import axios from "axios";
+import { createChat } from "../services/api";
 
 const NewChatModal = ({ isOpen, onClose, onCreated }) => {
   const [firstName, setFirstName] = useState("");
@@ -10,11 +10,12 @@ const NewChatModal = ({ isOpen, onClose, onCreated }) => {
   const handleCreate = () => {
     if (!firstName.trim() || !lastName.trim()) return;
 
-    axios
-      .post("http://localhost:3000/api/chats", { firstName, lastName })
-      .then((res) => {
-        onCreated(res.data);
+    createChat({ firstName, lastName })
+      .then(() => {
+        onCreated();
         onClose();
+        setFirstName("");
+        setLastName("");
       })
       .catch((err) => console.error(err));
   };
