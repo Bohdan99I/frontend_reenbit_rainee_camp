@@ -5,15 +5,14 @@ import NewChatModal from "./NewChatModal";
 const ChatList = ({ onSelectChat }) => {
   const [chats, setChats] = useState([]);
   const [showModal, setShowModal] = useState(false);
-  const [editChat, setEditChat] = useState(null);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [chatToEdit, setChatToEdit] = useState(null);
 
-  const loadChats = async (query = "") => {
+  const loadChats = async () => {
     try {
-      const res = await fetchChats(query);
+      const res = await fetchChats();
       setChats(res.data);
-    } catch (err) {
-      console.error("Error fetching chats:", err);
+    } catch (error) {
+      console.error("Помилка при завантаженні чатів:", error);
     }
   };
 
@@ -21,62 +20,58 @@ const ChatList = ({ onSelectChat }) => {
     loadChats();
   }, []);
 
-  const handleSearch = (e) => {
-    const value = e.target.value;
-    setSearchTerm(value);
-    loadChats(value);
-  };
-
-  const handleDelete = async (chatId) => {
-    if (window.confirm("Ти впевнений, що хочеш видалити цей чат?")) {
-      await deleteChat(chatId);
-      loadChats(searchTerm);
-    }
-  };
-
   const handleEdit = (chat) => {
-    setEditChat(chat);
+    setChatToEdit(chat);
     setShowModal(true);
   };
 
-  const handleModalClose = () => {
-    setShowModal(false);
-    setEditChat(null);
-  };
-
-  const handleModalSaved = () => {
-    loadChats(searchTerm);
-    handleModalClose();
+  const handleDelete = async (chatId) => {
+    if (window.confirm("Ви впевнені, що хочете видалити цей чат?")) {
+      try {
+        await deleteChat(chatId);
+        loadChats();
+      } catch (error) {
+        console.error("Помилка при видаленні чату:", error);
+      }
+    }
   };
 
   return (
     <div
-      style={{ width: "300px", borderRight: "1px solid #ccc", padding: "1rem" }}
+      style={{
+        width: "300px",
+        borderRight: "1px solid #ccc",
+        padding: "1rem",
+      }}
     >
       <h2>Чати</h2>
-      <input
-        type="text"
-        placeholder="Пошук..."
-        value={searchTerm}
-        onChange={handleSearch}
-        style={{ marginBottom: "1rem", width: "100%", padding: "0.5rem" }}
-      />
       <button
-        onClick={() => setShowModal(true)}
+        onClick={() => {
+          setChatToEdit(null); 
+          setShowModal(true);
+        }}
         style={{ marginBottom: "1rem" }}
       >
         + Новий чат
       </button>
       <ul style={{ listStyle: "none", padding: 0 }}>
         {chats.map((chat) => (
-          <li key={chat._id} style={{ marginBottom: "0.5rem" }}>
-            <span
+          <li
+            key={chat._id}
+            style={{
+              marginBottom: "0.5rem",
+              padding: "0.5rem",
+              border: "1px solid #ddd",
+              borderRadius: "4px",
+            }}
+          >
+            <div
               onClick={() => onSelectChat(chat)}
               style={{ cursor: "pointer" }}
             >
               {chat.firstName} {chat.lastName}
-            </span>
-            <div>
+            </div>
+            <div style={{ marginTop: "0.5rem" }}>
               <button
                 onClick={() => handleEdit(chat)}
                 style={{ marginRight: "0.5rem" }}
@@ -91,9 +86,9 @@ const ChatList = ({ onSelectChat }) => {
 
       <NewChatModal
         isOpen={showModal}
-        onClose={handleModalClose}
-        onSaved={handleModalSaved}
-        chatToEdit={editChat}
+        onClose={() => setShowModal(false)}
+        onCreated={loadChats}
+        chatToEdit={chatToEdit}
       />
     </div>
   );
