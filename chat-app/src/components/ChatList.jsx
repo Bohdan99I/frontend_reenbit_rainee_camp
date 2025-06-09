@@ -6,6 +6,7 @@ const ChatList = ({ onSelectChat }) => {
   const [chats, setChats] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [chatToEdit, setChatToEdit] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
 
   const loadChats = async () => {
     try {
@@ -36,6 +37,12 @@ const ChatList = ({ onSelectChat }) => {
     }
   };
 
+  const filteredChats = chats.filter((chat) =>
+    `${chat.firstName} ${chat.lastName}`
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase())
+  );
+
   return (
     <div
       style={{
@@ -45,17 +52,32 @@ const ChatList = ({ onSelectChat }) => {
       }}
     >
       <h2>Чати</h2>
+
+      <input
+        type="text"
+        placeholder="Пошук чату..."
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        style={{
+          width: "100%",
+          padding: "0.5rem",
+          marginBottom: "1rem",
+          boxSizing: "border-box",
+        }}
+      />
+
       <button
         onClick={() => {
-          setChatToEdit(null); 
+          setChatToEdit(null);
           setShowModal(true);
         }}
-        style={{ marginBottom: "1rem" }}
+        style={{ marginBottom: "1rem", width: "100%" }}
       >
         + Новий чат
       </button>
+
       <ul style={{ listStyle: "none", padding: 0 }}>
-        {chats.map((chat) => (
+        {filteredChats.map((chat) => (
           <li
             key={chat._id}
             style={{
@@ -95,3 +117,5 @@ const ChatList = ({ onSelectChat }) => {
 };
 
 export default ChatList;
+
+
