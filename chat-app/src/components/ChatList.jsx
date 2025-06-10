@@ -8,33 +8,33 @@ const ChatList = ({ onSelectChat }) => {
   const [chatToEdit, setChatToEdit] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
 
-  const loadChats = async () => {
+  const getChats = async () => {
     try {
       const res = await fetchChats();
       setChats(res.data);
-    } catch (error) {
-      console.error("Помилка при завантаженні чатів:", error);
+    } catch (err) {
+      console.error(err);
     }
   };
 
   useEffect(() => {
-    loadChats();
+    getChats();
   }, []);
+
+  const handleDelete = async (id) => {
+    const confirmed = window.confirm("Ви точно хочете видалити цей чат?");
+    if (!confirmed) return;
+    try {
+      await deleteChat(id);
+      getChats();
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   const handleEdit = (chat) => {
     setChatToEdit(chat);
     setShowModal(true);
-  };
-
-  const handleDelete = async (chatId) => {
-    if (window.confirm("Ви впевнені, що хочете видалити цей чат?")) {
-      try {
-        await deleteChat(chatId);
-        loadChats();
-      } catch (error) {
-        console.error("Помилка при видаленні чату:", error);
-      }
-    }
   };
 
   const filteredChats = chats.filter((chat) =>
@@ -45,37 +45,25 @@ const ChatList = ({ onSelectChat }) => {
 
   return (
     <div
-      style={{
-        width: "300px",
-        borderRight: "1px solid #ccc",
-        padding: "1rem",
-      }}
+      style={{ width: "300px", borderRight: "1px solid #ccc", padding: "1rem" }}
     >
       <h2>Чати</h2>
-
-      <input
-        type="text"
-        placeholder="Пошук чату..."
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-        style={{
-          width: "100%",
-          padding: "0.5rem",
-          marginBottom: "1rem",
-          boxSizing: "border-box",
-        }}
-      />
-
       <button
         onClick={() => {
           setChatToEdit(null);
           setShowModal(true);
         }}
-        style={{ marginBottom: "1rem", width: "100%" }}
+        style={{ marginBottom: "1rem" }}
       >
         + Новий чат
       </button>
-
+      <input
+        type="text"
+        placeholder="Пошук..."
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        style={{ width: "100%", marginBottom: "1rem", padding: "0.5rem" }}
+      />
       <ul style={{ listStyle: "none", padding: 0 }}>
         {filteredChats.map((chat) => (
           <li
@@ -105,11 +93,10 @@ const ChatList = ({ onSelectChat }) => {
           </li>
         ))}
       </ul>
-
       <NewChatModal
         isOpen={showModal}
         onClose={() => setShowModal(false)}
-        onCreated={loadChats}
+        onCreated={() => getChats()}
         chatToEdit={chatToEdit}
       />
     </div>
@@ -117,5 +104,3 @@ const ChatList = ({ onSelectChat }) => {
 };
 
 export default ChatList;
-
-
