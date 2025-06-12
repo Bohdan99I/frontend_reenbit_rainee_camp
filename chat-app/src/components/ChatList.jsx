@@ -10,35 +10,36 @@ const ChatList = ({ onSelectChat }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [toastMessage, setToastMessage] = useState("");
 
-  const loadChats = async () => {
+  const getChats = async () => {
     try {
       const res = await fetchChats();
       setChats(res.data);
-    } catch (error) {
-      console.error("Помилка при завантаженні чатів:", error);
+    } catch (err) {
+      console.error(err);
+      setToastMessage("❌ Не вдалося завантажити чати");
     }
   };
 
   useEffect(() => {
-    loadChats();
+    getChats();
   }, []);
+
+  const handleDelete = async (id) => {
+    const confirmed = window.confirm("Ви точно хочете видалити цей чат?");
+    if (!confirmed) return;
+    try {
+      await deleteChat(id);
+      getChats();
+      setToastMessage("✅ Чат видалено успішно");
+    } catch (err) {
+      console.error(err);
+      setToastMessage("❌ Сталася помилка при видаленні");
+    }
+  };
 
   const handleEdit = (chat) => {
     setChatToEdit(chat);
     setShowModal(true);
-  };
-
-  const handleDelete = async (chatId) => {
-    if (window.confirm("Ви впевнені, що хочете видалити цей чат?")) {
-      try {
-        await deleteChat(chatId);
-        loadChats();
-        setToastMessage("Чат успішно видалено ✅");
-      } catch (error) {
-        console.error("Помилка при видаленні чату:", error);
-        setToastMessage("❌ Сталася помилка при видаленні чату");
-      }
-    }
   };
 
   const filteredChats = chats.filter((chat) =>
@@ -49,38 +50,25 @@ const ChatList = ({ onSelectChat }) => {
 
   return (
     <div
-      style={{
-        width: "300px",
-        borderRight: "1px solid #ccc",
-        padding: "1rem",
-        position: "relative",
-      }}
+      style={{ width: "300px", borderRight: "1px solid #ccc", padding: "1rem" }}
     >
       <h2>Чати</h2>
-
-      <input
-        type="text"
-        placeholder="Пошук чату..."
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-        style={{
-          width: "100%",
-          padding: "0.5rem",
-          marginBottom: "1rem",
-          boxSizing: "border-box",
-        }}
-      />
-
       <button
         onClick={() => {
           setChatToEdit(null);
           setShowModal(true);
         }}
-        style={{ marginBottom: "1rem", width: "100%" }}
+        style={{ marginBottom: "1rem" }}
       >
         + Новий чат
       </button>
-
+      <input
+        type="text"
+        placeholder="Пошук..."
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        style={{ width: "100%", marginBottom: "1rem", padding: "0.5rem" }}
+      />
       <ul style={{ listStyle: "none", padding: 0 }}>
         {filteredChats.map((chat) => (
           <li
@@ -110,14 +98,17 @@ const ChatList = ({ onSelectChat }) => {
           </li>
         ))}
       </ul>
-
       <NewChatModal
         isOpen={showModal}
         onClose={() => setShowModal(false)}
-        onCreated={loadChats}
+        onCreated={() => {
+          getChats();
+          setToastMessage("✅ Чат створено або оновлено");
+        }}
         chatToEdit={chatToEdit}
       />
 
+      {/* Toast */}
       {toastMessage && (
         <Toast message={toastMessage} onClose={() => setToastMessage("")} />
       )}
